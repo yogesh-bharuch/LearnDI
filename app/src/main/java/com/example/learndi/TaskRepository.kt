@@ -9,7 +9,7 @@ import javax.inject.Singleton
 @Singleton
 class TaskRepository @Inject constructor(
     private val taskDao: TaskDao,
-    firestoreTaskService: FirestoreTaskService
+    //firestoreTaskService: FirestoreTaskService
 ) {
 
     val tasks: Flow<List<Task>> = taskDao.getAll()
