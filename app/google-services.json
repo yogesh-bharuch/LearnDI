@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "193717253804",
+    "project_id": "threegen-b5677",
+    "storage_bucket": "threegen-b5677.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:193717253804:android:2965cacbb885e4efb6d109",
+        "android_client_info": {
+          "package_name": "com.example.LearnDI"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcEAWYtlRryhdWpZUqA9RERP1_PtEz9hk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:193717253804:android:25dbe44a9f9554f7b6d109",
+        "android_client_info": {
+          "package_name": "com.example.learndi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcEAWYtlRryhdWpZUqA9RERP1_PtEz9hk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:193717253804:android:dc70e562cc7bb8a4b6d109",
+        "android_client_info": {
+          "package_name": "com.example.threegen"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcEAWYtlRryhdWpZUqA9RERP1_PtEz9hk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
