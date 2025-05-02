@@ -36,39 +36,39 @@ class SyncFirestoreToRoomWorker(
     }
     override suspend fun doWork(): Result
     {
-     /*
-        Log.d("FirestoreSync", "🚀 doWork started for SyncLocalToFirestoreWorker")
 
+        Log.d("FirestoreSync", "🚀 doWork started for SyncFirestore To Local Worker no any actual sync commented here onwards")
 
-        return try {
-            Log.d("FirestoreSync", "🔎 Fetching tasks to sync from local Room database...")
+        /*
+       return try {
+           Log.d("FirestoreSync", "🔎 Fetching tasks to sync from local Room database...")
 
-            // ✅ Use callback to handle the sync result properly
-            var resultMessage = "From SyncLocalToFirestoreWorker: Sync started..."
+           // ✅ Use callback to handle the sync result properly
+           var resultMessage = "From SyncLocalToFirestoreWorker: Sync started..."
 
-            val callback: (String) -> Unit = { result ->
-                resultMessage = result
-                //Log.d("FirestoreSync", "🔥 From SyncLocalToFirestoreWorker.dowork: Sync result: $resultMessage")
-            }
+           val callback: (String) -> Unit = { result ->
+               resultMessage = result
+               //Log.d("FirestoreSync", "🔥 From SyncLocalToFirestoreWorker.dowork: Sync result: $resultMessage")
+           }
 
-            // ✅ Trigger the sync with the callback
-            repository.syncLocalDataToFirestore(callback)
+           // ✅ Trigger the sync with the callback
+           repository.syncLocalDataToFirestore(callback)
 
-            // ✅ Prepare WorkManager result data
-            val outputData = workDataOf("SYNC_RESULT" to resultMessage)
-            Log.d("FirestoreSync", "🔥 From SyncLocalToFirestoreWorker.dowork: Room → Firestore Sync completed: $resultMessage")
+           // ✅ Prepare WorkManager result data
+           val outputData = workDataOf("SYNC_RESULT" to resultMessage)
+           Log.d("FirestoreSync", "🔥 From SyncLocalToFirestoreWorker.dowork: Room → Firestore Sync completed: $resultMessage")
 
-            Result.success(outputData)   // ✅ Return success with output data
+           Result.success(outputData)   // ✅ Return success with output data
 
-        } catch (e: Exception) {
-            Log.e("FirestoreSync", "❌ Sync failed: ${e.localizedMessage}", e)
-            // ✅ Return failure with error message
-            val outputData = workDataOf("SYNC_RESULT" to "🔥 From SyncLocalToFirestoreWorker.dowork: Room → Firestore Sync failed: ${e.localizedMessage}")
+       } catch (e: Exception) {
+           Log.e("FirestoreSync", "❌ Sync failed: ${e.localizedMessage}", e)
+           // ✅ Return failure with error message
+           val outputData = workDataOf("SYNC_RESULT" to "🔥 From SyncLocalToFirestoreWorker.dowork: Room → Firestore Sync failed: ${e.localizedMessage}")
 
-            Result.retry()  // 🔁 Request retry
-        }
+           Result.retry()  // 🔁 Request retry
+       }
 
-    */
+   */
         return Result.success() // remove this line when uncomment above block
     }
 }
