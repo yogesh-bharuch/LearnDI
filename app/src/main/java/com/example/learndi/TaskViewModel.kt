@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.learndi.firestore.FirestoreTaskService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -45,19 +46,32 @@ class TaskViewModel @Inject constructor(
             // Upload and replace the image URI
             val uriToUrl = task.imageUri?.let { Uri.parse(it) } ?: Uri.EMPTY // // uriToUrl = Uri.parse("https://example.com/my-image")
             // upload image file (Image URI) + task.id (File name), with bitmap size reduced pixels in Firebase Storage.
-            val retUri = firestoreService.uploadResizedImageAndGetUrl(uriToUrl, task.id, 500, 500)
-            Log.d("Firestore", "Uploaded (resized) image URL: $retUri")
+            val returnUri = firestoreService.uploadResizedImageAndGetUrl(uriToUrl, task.id, 500, 500)
+            delay(1000)
 
-            // Update the task locally with new imageUri "https:"
-            val updatedTask = task.copy(imageUri = retUri)
-            repository.insert(updatedTask)
+            //Image upload in firestore success than only inserts task in firestore followed by inserts in local room database
+            if (returnUri != null) {
+                // Update task data map with new image URI before sending to Firestore
+                val updatedTaskData = taskData.toMutableMap().apply {
+                    put("imageUri", returnUri)
+                }
+                val result = firestoreService.addTask(updatedTaskData)
+                Log.d("Firestore","From ViewModel.AddTask: Uploaded (resized) image URL = $returnUri")
 
-            // Update task data map with new image URI before sending to Firestore
-            val updatedTaskData = taskData.toMutableMap().apply {
-                put("imageUri", retUri)
+                    //if Task update in firestore success than only inserts in local room
+                    if (result != null) {
+                        Log.d("Firestore","From ViewModel.AddTask: inserted task in firestore = ${updatedTaskData["id"]}")
+                        val updatedTask = task.copy(imageUri = returnUri) // Update the task locally with new imageUri "https:"
+                        val resultLocalDatabaseUpdated = repository.insert(updatedTask)
+                        Log.d("Firestore","From ViewModel.AddTask: inserted task in Local Database = ${updatedTask.id}")
+                    } else {
+                        // delete uploaded image
+                        firestoreService.deleteImageFromStorage(updatedTaskData["id"].toString())
+                    }
+
+            } else {
+                Log.e("Firestore", "❌ Firestore upload failed for Image & task hence not inserted in local database may be internet not available")
             }
-            firestoreService.addTask(updatedTaskData)
-            //triggerImmediateSync(context)
         }
     }
 

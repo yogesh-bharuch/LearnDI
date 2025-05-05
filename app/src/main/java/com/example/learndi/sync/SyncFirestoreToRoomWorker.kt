@@ -26,7 +26,7 @@ class SyncFirestoreToRoomWorker(
     //private val currentUserId: String = FirebaseAuth.getInstance().currentUser?.uid ?: "Unknown"
 
     // ✅ Initialize the repository directly
-    private val repository: SyncRepository by lazy { SyncRepository.getInstance(context) }
+    //private val repository: SyncRepository by lazy { SyncRepository.getInstance(context) }
     // ✅ Read sync parameters from SharedPreferences
     private fun getSyncParams(context: Context): Pair<Long, String> {
         val sharedPreferences = context.getSharedPreferences("SyncPrefs_LearnDi", Context.MODE_PRIVATE)

@@ -118,6 +118,30 @@ object WorkManagerHelper {
      * ✅ Periodic Sync: Runs in the background (even if the app is closed)
      * - Syncs Local → Firestore → Room in a chain.
      */
+    fun scheduleSyncAtStartup(context: Context, timeIntervalInMinutes: Long = 20) {
+        // ⏳ Schedule periodic sync every X minutes
+        Log.d("SyncRepository","From WorkManagerHelper.scheduleSyncAtStartup")
+        val periodicSyncRequest = PeriodicWorkRequestBuilder<SyncWorker>(timeIntervalInMinutes, TimeUnit.MINUTES)
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            "SyncWork",
+            ExistingPeriodicWorkPolicy.UPDATE,
+            periodicSyncRequest
+        )
+        // ✅ Log AFTER scheduling periodic sync
+        Log.d("FirestoreSync", "🔥 Sync scheduled: Immediate and every $timeIntervalInMinutes minutes")
+
+
+        // 🚀 Trigger immediate sync at app launch
+        Log.d("SyncRepository","From WorkManagerHelper.scheduleSyncAtStartup: Trigger immediate sync at app launch")
+        val immediateSyncRequest = OneTimeWorkRequestBuilder<SyncWorker>().build()
+        WorkManager.getInstance(context).enqueue(immediateSyncRequest)
+
+        Log.d("FirestoreSync", "🔥 Sync scheduled: Immediate and every $timeIntervalInMinutes minutes")
+    }
+
     fun schedulePeriodicSync(
         context: Context,
         timeIntervalInMinutes: Long = 720,

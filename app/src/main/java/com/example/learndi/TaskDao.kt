@@ -15,7 +15,7 @@ interface TaskDao {
     fun getAll(): Flow<List<Task>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(task: Task)
+    suspend fun insert(task: Task): Long
 
     @Update
     suspend fun update(task: Task)
@@ -28,6 +28,11 @@ interface TaskDao {
 
     @Query("SELECT * FROM task_table WHERE deleted = 1")
     suspend fun getMarkAsDeletedTasks(): List<Task>
+
+    @Query("SELECT * FROM task_table WHERE syncStatus = :status")
+    fun getUnsyncedTasks(status: SyncStatus = SyncStatus.NOT_SYNCED): Flow<List<Task>>
+
+
 
 
 }

@@ -14,8 +14,8 @@ class TaskRepository @Inject constructor(
 
     val tasks: Flow<List<Task>> = taskDao.getAll()
 
-    suspend fun insert(task: Task) {
-        taskDao.insert(task)
+    suspend fun insert(task: Task): Boolean {
+       return taskDao.insert(task) > 0 // ✅ Returns `true` if the task was inserted success
     }
 
     suspend fun update(task: Task) {

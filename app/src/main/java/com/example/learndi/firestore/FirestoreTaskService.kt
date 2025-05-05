@@ -36,14 +36,16 @@ class FirestoreTaskService @Inject constructor(
      *
      * @param task The task to be added.
      */
-    suspend fun addTask(taskData: Map<String, Any?>) {
-        try {
+    suspend fun addTask(taskData: Map<String, Any?>): Result<Boolean> {
+        return try {
             // Add the task data directly from the map
             taskCollection.document(taskData["id"] as? String ?: "BadData Passed")
                 .set(taskData)  // Store the task as a Map in Firestore
-            Log.d("Firestore", "✅ Task added to Firestore: ${taskData["id"]}")
+            Log.d("Firestore", "✅ From FirestoreTaskServivice.addtask: Task added to Firestore: ${taskData["id"]}")
+            Result.success(true)
         } catch (e: Exception) {
-            Log.e("Firestore", "❌ Failed to add task: ${e.message}")
+            Log.e("Firestore", "❌ From FirestoreTaskServivice.addtask: Failed to add task: ${e.message}")
+            Result.success(false)
         }
     }
 
@@ -52,10 +54,10 @@ class FirestoreTaskService @Inject constructor(
             taskCollection.document(taskId)
                 .update(taskData) // Firestore 'update' (only updates provided fields)
                 .await()          // Important: suspend until operation completes
-            Log.d("Firestore", "✅ Task updated in Firestore: $taskId")
+            Log.d("Firestore", "✅ From FirestoreTaskServivice.addtask: Task updated in Firestore: $taskId")
             true  // ✅ Success
         } catch (e: Exception) {
-            Log.e("Firestore", "❌ Failed to update task: ${e.message}")
+            Log.e("Firestore", "❌ From FirestoreTaskServivice.addtask: Failed to update task: ${e.message}")
             false // ❌ Failure
         }
     }
@@ -119,7 +121,7 @@ class FirestoreTaskService @Inject constructor(
 
             downloadUrl.toString()
         } catch (e: Exception) {
-            Log.e("FirestoreTaskService", "❌ Resized image upload failed: ${e.message}")
+            Log.e("FirestoreTaskService", "❌ From FirestoreTaskServivice.uploadResizedImageAndGetUrl: Resized image upload failed: ${e.message}")
             null
         }
     }
@@ -134,7 +136,7 @@ class FirestoreTaskService @Inject constructor(
     suspend fun deleteTask(id: String, uuid: String = ""): Boolean {
         return try {
             // Delete associated image (if exists)
-            val imageDeleted = deleteImageFromStorage(uuid, id)
+            val imageDeleted = deleteImageFromStorage(id)
 
             // Delete Firestore document
             val snapshot = taskCollection.whereEqualTo("id", id).get().await()
@@ -157,7 +159,7 @@ class FirestoreTaskService @Inject constructor(
      * @param id The ID used as image filename.
      * @return True if image deleted, false if it fails or doesn't exist.
      */
-    suspend fun deleteImageFromStorage(uuid: String, id: String): Boolean {
+    suspend fun deleteImageFromStorage(id: String): Boolean {
         return try {
             val imageRef = storage.reference.child("task_images/$id")
             imageRef.delete().await()

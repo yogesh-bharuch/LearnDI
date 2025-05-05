@@ -35,7 +35,7 @@ class FirestoreSyncWorker @AssistedInject constructor(
                             Log.d("FirestoreSyncWorker", "Adding task: ${task.id}")
                             // Convert Task to map and pass it to addTask
 
-                            firestoreService.addTask(taskData)
+                            val result = firestoreService.addTask(taskData)
 
                         }
                         SyncStatus.UPDATED -> {

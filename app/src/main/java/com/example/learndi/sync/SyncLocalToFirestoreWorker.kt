@@ -27,7 +27,7 @@ class SyncLocalToFirestoreWorker(
     //private val currentUserId: String = FirebaseAuth.getInstance().currentUser?.uid ?: "Unknown"
 
     // ✅ Initialize the repository directly
-    private val repository: SyncRepository by lazy { SyncRepository.getInstance(context) }
+    //private val repository: SyncRepository by lazy { SyncRepository.getInstance(context) }
     // ✅ Read sync parameters from SharedPreferences
     private fun getSyncParams(context: Context): Pair<Long, String> {
         val sharedPreferences = context.getSharedPreferences("SyncPrefs_LearnDi", Context.MODE_PRIVATE)
@@ -51,7 +51,7 @@ class SyncLocalToFirestoreWorker(
             }
 
             // ✅ Trigger the sync with the callback
-            repository.syncLocalDataToFirestore(callback)
+            //repository.syncLocalDataToFirestore(callback)
 
             // ✅ Prepare WorkManager result data
             val outputData = workDataOf("SYNC_RESULT" to resultMessage)
