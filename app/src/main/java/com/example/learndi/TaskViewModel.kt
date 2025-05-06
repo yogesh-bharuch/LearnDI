@@ -9,10 +9,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.learndi.firestore.FirestoreTaskService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 /**
@@ -38,10 +40,69 @@ class TaskViewModel @Inject constructor(
      * @param taskData Map containing task fields
      * @param task Full Task object
      */
-    fun addTask(
-        taskData: Map<String, Any?>,
-        task: Task
-    ) {
+    suspend fun addTask(taskData: Map<String, Any?>, task: Task): Result<Boolean> {
+        return withContext(Dispatchers.IO) {
+            var returnUri: String? = null
+
+            try {
+                // upload image
+                try {
+                    Log.d("Firestore", "🔄 From ViewModel.AddTask:  Uploading (resized) image...")
+                    returnUri = firestoreService.uploadResizedImageAndGetUrl(Uri.parse(task.imageUri ?: ""), task.id, 500, 500)
+                } catch (e: Exception) {
+                    Log.e("Firestore", "❌ From ViewModel.AddTask: Upload failed: ${e.message}")
+                    return@withContext Result.failure(Exception("From ViewModel.AddTask: Image upload failed ..."))
+                }
+                if (returnUri == null) {
+                    Log.e("Firestore", "❌ From ViewModel.AddTask: Image upload failed, returning failure.")
+                    return@withContext Result.failure(Exception("Image upload failed"))
+                }
+
+                // ✅ Image upload successful → Now update the task data with the new image URL
+                val updatedTaskData = taskData.toMutableMap().apply {
+                    Log.d("Firestore", "✅ From ViewModel.AddTask: Image uploaded successfully!")
+                    put("imageUri", returnUri)
+                }
+
+                // ✅ Upload the task document
+                var firestoreSuccess = false
+                try {
+                    Log.d("Firestore", "🔄 From ViewModel.AddTask: Uploading task document...")
+                    val result = firestoreService.addTask(updatedTaskData)
+
+                    if (result.isSuccess) {
+                        Log.d("Firestore", "✅ From ViewModel.AddTask: Task document uploaded successfully!")
+                        firestoreSuccess = true
+                    }
+                } catch (e: Exception) {
+                    Log.e("Firestore", "❌ From ViewModel.AddTask: Task document upload failed: ${e.message}")
+                }
+
+                // ❌ If task document upload fails, delete the previously uploaded image to prevent orphaned files
+                if (!firestoreSuccess) {
+                    Log.e("Firestore", "❌ From ViewModel.AddTask: Task document upload failed, deleting uploaded image")
+                    val resultImageDeleted = firestoreService.deleteImageFromStorage(task.id)
+                    if (resultImageDeleted) {
+                        Log.d("Firestore", "❌ From ViewModel.AddTask: deleted uploaded image as Task document upload failed")}
+                    return@withContext Result.failure(Exception("Document Task upload failed"))
+                }
+
+                // ✅ Firestore task document successfully uploaded → Now insert task into local Room database
+                val updatedTask = task.copy(imageUri = returnUri)
+                val resultLocalDatabaseUpdated = repository.insert(updatedTask)
+
+                // ✅ Everything succeeded → Return success
+                Log.d("Firestore", "✅ Task inserted into Local Database: ${updatedTask.id}")
+                return@withContext Result.success(true)
+            } catch (e: Exception) {
+                Log.e("Firestore", "❌ Unexpected error: ${e.message}")
+                //return@withContext Result.failure(e)
+                return@withContext Result.failure(Exception("Failed to insert task into local database"))
+            }
+        }
+    }
+    /*
+    fun addTask1(taskData: Map<String, Any?>, task: Task) {
         viewModelScope.launch {
             // Upload and replace the image URI
             val uriToUrl = task.imageUri?.let { Uri.parse(it) } ?: Uri.EMPTY // // uriToUrl = Uri.parse("https://example.com/my-image")
@@ -74,6 +135,7 @@ class TaskViewModel @Inject constructor(
             }
         }
     }
+    */
 
     /**
      * Toggles a task's completion status and updates Room + Firestore.

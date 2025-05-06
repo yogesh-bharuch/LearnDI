@@ -1,6 +1,10 @@
 package com.example.learndi
 
+import android.content.Context
+import android.net.ConnectivityManager
 import android.net.Uri
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -29,8 +33,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewModelScope
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -156,7 +162,6 @@ fun TaskEntryScreen(
 
         // Save IconButton
 
-        // Save Button
         Button(
             onClick = {
                 if (textTitle.isNotBlank() &&
@@ -179,28 +184,44 @@ fun TaskEntryScreen(
                         isAlive = isAlive,
                         childNumber = childNumber,
                         imageUri = selectedUri,
-                        createdBy = "user_id",  // Replace with actual user ID if needed
-                        parentID = null,         // Set based on your logic
-                        spouseID = null,         // Set based on your logic
+                        createdBy = "user_id", // Replace with actual user ID if needed
+                        parentID = null,       // Set based on your logic
+                        spouseID = null,       // Set based on your logic
                         updatedAt = System.currentTimeMillis()
                     )
 
                     // Convert Task to map and pass it to addTask
                     val taskData = task.toMap()
 
-                    // Call the ViewModel's addTask with the map
-                    viewModel.addTask(taskData, task)
+                    // 🔹 Call `addTask` inside a coroutine scope
+                    if (!isInternetAvailable(context)){
+                        Toast.makeText(context, "❌ No Internet Connection!", Toast.LENGTH_SHORT).show()
+                        return@Button // ✅ Exit function early
+                    }
+                        viewModel.viewModelScope.launch {
+                            val result = viewModel.addTask(taskData, task)
 
-                    // Clear fields after saving
-                    textTitle = ""
-                    firstName = ""
-                    middleName = ""
-                    lastName = ""
-                    town = ""
-                    isAlive = true
-                    childNumber = 1
-                    selectedUri = ""
-                    showError = false
+                            if (result.isSuccess) {
+                                Log.d("Firestore", "✅ Task added successfully!")
+
+                                // Clear fields after saving
+                                textTitle = ""
+                                firstName = ""
+                                middleName = ""
+                                lastName = ""
+                                town = ""
+                                isAlive = true
+                                childNumber = 1
+                                selectedUri = ""
+                                showError = false
+                            } else {
+                                Log.e(
+                                    "Firestore",
+                                    "❌ Failed to add task: ${result.exceptionOrNull()?.message}"
+                                )
+                                showError = true
+                            }
+                        }
                 } else {
                     showError = true
                 }
@@ -212,4 +233,10 @@ fun TaskEntryScreen(
             Text(text = "Save") // Button shows "Save" text
         }
     }
+}
+
+fun isInternetAvailable(context: Context): Boolean {
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val networkInfo = connectivityManager.activeNetworkInfo
+    return networkInfo != null && networkInfo.isConnected
 }

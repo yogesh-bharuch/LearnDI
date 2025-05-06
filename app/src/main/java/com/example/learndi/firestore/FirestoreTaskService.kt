@@ -10,10 +10,12 @@ import com.example.learndi.toMap
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.time.delay
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.delay
 
 /**
  * A service class responsible for handling Firestore and Firebase Storage operations
@@ -94,35 +96,36 @@ class FirestoreTaskService @Inject constructor(
      */
     suspend fun uploadResizedImageAndGetUrl(uri: Uri, uuid: String, maxWidth: Int, maxHeight: Int): String? {
         return try {
-            // Convert URI to InputStream
+            // Convert URI to InputStream 1️⃣ Open input stream from the image URI
             val inputStream = appContext.contentResolver.openInputStream(uri)
                 ?: throw Exception("Cannot open URI")
 
-            // Decode the InputStream into a Bitmap
+            // 2️⃣ Decode to Bitmap Decode the InputStream into a Bitmap
             val originalBitmap = BitmapFactory.decodeStream(inputStream)
 
-            // Maintain aspect ratio while resizing
+            // 3️⃣ Calculate resized dimensions preserving aspect ratio Maintain aspect ratio while resizing
             val aspectRatio = originalBitmap.width.toDouble() / originalBitmap.height
             val newWidth = if (aspectRatio > 1) maxWidth else (maxHeight * aspectRatio).toInt()
             val newHeight = if (aspectRatio > 1) (maxWidth / aspectRatio).toInt() else maxHeight
 
-            // Resize bitmap
+            // 4️⃣ Resize bitmap Resize bitmap
             val resizedBitmap = Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
 
-            // Convert Bitmap to InputStream
+            // 5️⃣ Convert resized bitmap to InputStream Convert Bitmap to InputStream
             val outputStream = ByteArrayOutputStream()
-            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
             val resizedInputStream = ByteArrayInputStream(outputStream.toByteArray())
 
-            // Upload resized image
+            // 6️⃣ Upload to Firebase Storage Upload resized image
             val imageRef = storage.reference.child("task_images/$uuid")
             imageRef.putStream(resizedInputStream).await()
             val downloadUrl = imageRef.downloadUrl.await()
 
             downloadUrl.toString()
         } catch (e: Exception) {
+            // 🚫 Log error, then rethrow to allow retry logic to handle it
             Log.e("FirestoreTaskService", "❌ From FirestoreTaskServivice.uploadResizedImageAndGetUrl: Resized image upload failed: ${e.message}")
-            null
+            throw e
         }
     }
 
